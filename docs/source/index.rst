@@ -1,10 +1,10 @@
-Welcome to Potc's Documentation
-=====================================
+Welcome to Chainloader's Documentation
+=========================================================
 
 Overview
 -------------
 
-``Potc`` is a module which support the transform from \
+``Chainloader`` is a module which support the transform from \
 any python objects to python source which can be directly \
 imported and built.
 

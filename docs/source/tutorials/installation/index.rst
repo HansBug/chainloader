@@ -1,7 +1,7 @@
 Installation
 ===================
 
-Potc is currently hosted on PyPI. It required python >= 3.6.
+Chainloader is currently hosted on PyPI. It required python >= 3.6.
 
 You can simply install chainloader from PyPI with the following command:
 
@@ -29,5 +29,5 @@ is successful.
     :language: text
     :linenos:
 
-Potc is still under development, you can also check out the \
+Chainloader is still under development, you can also check out the \
 documents in stable version through `https://HansBug.github.io/chainloader/ <https://HansBug.github.io/chainloader/>`_.
