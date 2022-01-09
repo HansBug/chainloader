@@ -8,3 +8,9 @@ cdef class _IsTypeUnit(_CBaseUnit):
     cpdef _CResultInfo _validate(self, object v)
 
 cpdef _CUnitWrapper is_type(type t)
+
+cdef class _ToTypeUnit(_CBaseUnit):
+    cdef type _type
+    cpdef _CResultInfo _validate(self, object v)
+
+cpdef inline _CUnitWrapper to_type(type t)

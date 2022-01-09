@@ -18,3 +18,14 @@ cdef class _IsTypeUnit(_CBaseUnit):
 @cython.binding(True)
 cpdef inline _CUnitWrapper is_type(type t):
     return _CUnitWrapper(_IsTypeUnit(t))
+
+cdef class _ToTypeUnit(_CBaseUnit):
+    def __cinit__(self, type type_):
+        self._type = type_
+
+    cpdef _CResultInfo _validate(self, object v):
+        return _c_res_valid(self._type(v))
+
+@cython.binding(True)
+cpdef inline _CUnitWrapper to_type(type t):
+    return _CUnitWrapper(_ToTypeUnit(t))
