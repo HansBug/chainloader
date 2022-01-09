@@ -8,3 +8,10 @@ is_type
 
 .. autofunction:: is_type
 
+
+to_type
+-----------------
+
+.. autofunction:: to_type
+
+
