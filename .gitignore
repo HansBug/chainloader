@@ -60,8 +60,6 @@ gen
 
 ### Images template
 # JPEG
-*.jpg
-*.jpeg
 *.jpe
 *.jif
 *.jfif
@@ -101,6 +99,10 @@ gen
 # Tagged Image File Format
 *.tiff
 *.tif
+
+# Scalable Vector Graphics
+*.svg
+*.svgz
 
 # Portable Document Format
 *.pdf
@@ -628,6 +630,7 @@ FodyWeavers.xsd
 ### Vim template
 # Swap
 [._]*.s[a-v][a-z]
+!*.svg  # comment out if you don't need vector files
 [._]*.sw[a-p]
 [._]s[a-rt-v][a-z]
 [._]ss[a-gi-z]
@@ -855,6 +858,7 @@ pip-selfcheck.json
 */*/*/bd/*/ip/*/*.xml
 
 *.c
+*.cpp
 *.h
 *.vho
 */*/bd/*/ip/*/*.tcl
@@ -934,6 +938,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+wheelhouse/
 downloads/
 eggs/
 .eggs/
@@ -1202,3 +1207,4 @@ fabric.properties
 /docs/source/**/*.sh.err
 /docs/source/**/*.sh.exitcode
 /docs/source/**/*.dat.*
+!/docs/source/_static/**/*
