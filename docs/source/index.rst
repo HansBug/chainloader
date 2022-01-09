@@ -25,6 +25,7 @@ imported and built.
     :caption: API Documentation
 
     api_doc/config/index
+    api_doc/units/index
 
 .. toctree::
     :maxdepth: 2
