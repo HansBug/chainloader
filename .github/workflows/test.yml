@@ -13,6 +13,8 @@ jobs:
       matrix:
         os:
           - 'ubuntu-18.04'
+          - 'windows-2019'
+          - 'macos-10.15'
         python-version:
           - '3.6'
           - '3.7'
@@ -21,22 +23,53 @@ jobs:
           - '3.10'
 
     steps:
+      - name: Get system version for linux
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        shell: bash
+        run: |
+          echo "OS_NAME=Linux" >> $GITHUB_ENV
+          echo "IS_WIN=" >> $GITHUB_ENV
+          echo "IS_MAC=" >> $GITHUB_ENV
+      - name: Get system version for windows
+        if: ${{ contains(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          echo "OS_NAME=Windows" >> $GITHUB_ENV
+          echo "IS_WIN=1" >> $GITHUB_ENV
+          echo "IS_MAC=" >> $GITHUB_ENV
+      - name: Get system version for macos
+        if: ${{ contains(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          echo "OS_NAME=MacOS" >> $GITHUB_ENV
+          echo "IS_WIN=" >> $GITHUB_ENV
+          echo "IS_MAC=1" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 20
       - name: Set up system dependences on linux
-        if: ${{ runner.os == 'Linux' }}
+        if: ${{ env.OS_NAME == 'Linux' }}
+        shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y tree cloc wget curl make graphviz
+          sudo apt-get install -y tree cloc wget curl make zip
           sudo apt-get install -y libxml2-dev libxslt-dev python-dev  # need by pypy3
-          dot -V
+      - name: Set up system dependences on windows
+        if: ${{ env.OS_NAME == 'Windows' }}
+        shell: bash
+        run: |
+          choco install tree cloc wget curl make zip
+      - name: Set up system dependences on macos
+        if: ${{ env.OS_NAME == 'MacOS' }}
+        run: |
+          brew install tree cloc wget curl make zip
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
+        shell: bash
         run: |
           python -m pip install --upgrade pip
           pip install --upgrade flake8 setuptools wheel twine
@@ -44,6 +77,7 @@ jobs:
           pip install -r requirements-build.txt
           pip install -r requirements-test.txt
       - name: Test the basic environment
+        shell: bash
         run: |
           python -V
           pip --version
@@ -55,8 +89,9 @@ jobs:
         env:
           CI: 'true'
           LINETRACE: 1
+        shell: bash
         run: |
-          make clean build unittest
+          make build unittest IS_WIN=${{ env.IS_WIN }} IS_MAC=${{ env.IS_MAC }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -75,6 +110,7 @@ jobs:
       matrix:
         os:
           - 'ubuntu-18.04'
+          - 'macos-10.15'
         python-version:
           - '3.6'
           - '3.7'
@@ -83,23 +119,94 @@ jobs:
           - '3.10'
 
     steps:
+      - name: Get system version for linux
+        if: ${{ contains(matrix.os, 'ubuntu') }}
+        shell: bash
+        run: |
+          echo "OS_NAME=Linux" >> $GITHUB_ENV
+          echo "IS_WIN=" >> $GITHUB_ENV
+          echo "IS_MAC=" >> $GITHUB_ENV
+      - name: Get system version for windows
+        if: ${{ contains(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          echo "OS_NAME=Windows" >> $GITHUB_ENV
+          echo "IS_WIN=1" >> $GITHUB_ENV
+          echo "IS_MAC=" >> $GITHUB_ENV
+      - name: Get system version for macos
+        if: ${{ contains(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          echo "OS_NAME=MacOS" >> $GITHUB_ENV
+          echo "IS_WIN=" >> $GITHUB_ENV
+          echo "IS_MAC=1" >> $GITHUB_ENV
+      - name: Get python type for pypy
+        if: ${{ contains(matrix, 'pypy') }}
+        shell: bash
+        run: |
+          echo "PYTYPE=pypy" >> $GITHUB_ENV
+      - name: Get python type for cpython
+        if: ${{ !contains(matrix, 'pypy') }}
+        shell: bash
+        run: |
+          echo "PYTYPE=cp" >> $GITHUB_ENV
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 20
+      - name: Set up system dependences on linux
+        if: ${{ env.OS_NAME == 'Linux' }}
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tree cloc wget curl make zip
+          sudo apt-get install patchelf
+          sudo apt-get install -y libxml2-dev libxslt-dev python-dev  # need by pypy3
+      - name: Set up system dependences on windows
+        if: ${{ env.OS_NAME == 'Windows' }}
+        shell: bash
+        run: |
+          choco install tree cloc wget curl make zip
+      - name: Set up system dependences on macos
+        if: ${{ env.OS_NAME == 'MacOS' }}
+        run: |
+          brew install tree cloc wget curl make zip
+          brew install patchelf
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Set up python dependences
+      - name: Install dependencies
+        shell: bash
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install --upgrade flake8 setuptools wheel twine
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-build.txt ]; then pip install -r requirements-build.txt; fi
-          if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
+          pip install -r requirements.txt
+          pip install -r requirements-build.txt
+          pip install -r requirements-test.txt
           pip install --upgrade build
-      - name: Build packages
+      - name: Build cython part
+        shell: bash
         run: |
-          make package
+          make build IS_WIN=${{ env.IS_WIN }} IS_MAC=${{ env.IS_MAC }}
+      - name: Get package version
+        shell: bash
+        run: |
+          python -c 'from chainloader.config.meta import __VERSION__;print(__VERSION__)'
+          echo "PACKAGE_VERSION=$(python -c 'from chainloader.config.meta import __VERSION__;print(__VERSION__)')" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=$(python -c 'from chainloader.config.meta import __TITLE__;print(__TITLE__)')" >> $GITHUB_ENV
+          echo "GIT_COMMIT_ID=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_ENV
+          echo "PYTHON_VERSION=${{ env.PYTYPE }}$(python -V | xargs -n 1 | tail -1)" >> $GITHUB_ENV
+          echo "CPU_ARCH=$(uname -m)" >> $GITHUB_ENV
+      - name: Build packages
+        shell: bash
+        run: |
+          make package IS_WIN=${{ env.IS_WIN }} IS_MAC=${{ env.IS_MAC }}
           ls -al dist
+      - name: Upload executable files to artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.PACKAGE_NAME }}-v${{ env.PACKAGE_VERSION }}-${{ env.PYTHON_VERSION }}-${{ env.OS_NAME }}-${{ env.CPU_ARCH }}-${{ env.GIT_COMMIT_ID }}
+          path: |
+            dist/*.tar.gz
+            dist/*.whl

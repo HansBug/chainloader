@@ -12,10 +12,20 @@ RANGE_DIR      ?= .
 RANGE_TEST_DIR := ${TEST_DIR}/${RANGE_DIR}
 RANGE_SRC_DIR  := ${SRC_DIR}/${RANGE_DIR}
 
-CYTHON_FILES := $(shell find ${SRC_DIR} -name '*.pyx')
+IS_WIN ?=
+IS_MAC ?=
+ifdef IS_WIN
+	FIND_PYX := forfiles /p ${SRC_DIR} /m '*.pyx'
+	FIND_SO  := forfiles /p ${SRC_DIR} /m '*.so'
+else
+	FIND_PYX := find ${SRC_DIR} -name '*.pyx'
+	FIND_SO  := find ${SRC_DIR} -name '*.so'
+endif
+
+CYTHON_FILES := $(shell ${FIND_PYX})
 
 COV_TYPES        ?= xml term-missing
-COMPILE_PLATFORM ?= manylinux_2_24_x86_64
+COMPILE_PLATFORM ?= manylinux_2_17_x86_64
 
 build:
 	$(PYTHON) setup.py build_ext --inplace \
@@ -23,14 +33,24 @@ build:
 
 package:
 	$(PYTHON) -m build --sdist --wheel --outdir ${DIST_DIR}
-	for whl in `ls ${DIST_DIR}/*.whl`; do \
-		auditwheel repair $$whl -w ${WHEELHOUSE_DIR} --plat ${COMPILE_PLATFORM} && \
-		cp `ls ${WHEELHOUSE_DIR}/*.whl` ${DIST_DIR} && \
-		rm -rf $$whl ${WHEELHOUSE_DIR}/* \
-  	; done
+	if [ ${IS_MAC} ]; then \
+		for whl in `ls ${DIST_DIR}/*.whl`; do \
+			delocate-wheel -w ${WHEELHOUSE_DIR} -v $$whl && \
+			rm -rf $$whl && \
+			cp `ls ${WHEELHOUSE_DIR}/*.whl` ${DIST_DIR} && \
+			rm -rf ${WHEELHOUSE_DIR}/*.whl \
+		; done; \
+	else \
+		for whl in `ls ${DIST_DIR}/*.whl`; do \
+			auditwheel repair $$whl -w ${WHEELHOUSE_DIR} --plat ${COMPILE_PLATFORM} && \
+			rm -rf $$whl && \
+			cp `ls ${WHEELHOUSE_DIR}/*.whl` ${DIST_DIR} && \
+			rm -rf ${WHEELHOUSE_DIR}/*.whl \
+		; done; \
+	fi
 
 clean:
-	rm -rf $(shell find ${SRC_DIR} -name '*.so') \
+	rm -rf $(shell ${FIND_SO}) \
 			$(shell ls $(addsuffix .c, $(basename ${CYTHON_FILES})) \
 					  $(addsuffix .cpp, $(basename ${CYTHON_FILES})) \
 				2> /dev/null)
